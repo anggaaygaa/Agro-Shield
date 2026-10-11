@@ -1,0 +1,78 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+    table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; }
+    th, td { border: 1px solid #000000; padding: 10px; text-align: left; vertical-align: top; }
+    th { background-color: #f2f2f2; font-weight: bold; }
+    h2 { font-family: Arial, sans-serif; }
+</style>
+</head>
+<body>
+    <h2>Tabel Analisis SWOT: Agro-Shield</h2>
+    <p><b>(Prescriptive Analytics berbasis RAG untuk Hacktiv8 x IBM National AI Hackathon 2026)</b></p>
+    <table>
+        <tr>
+            <th width="20%">Kategori</th>
+            <th width="25%">Poin Analisis / Faktor</th>
+            <th width="55%">Deskripsi Detail</th>
+        </tr>
+        <tr>
+            <td rowspan="4"><b>STRENGTHS</b><br>(Kekuatan Internal)</td>
+            <td><b>1. Analitik Preskriptif (Solusi Konkret)</b></td>
+            <td>Tidak sekadar menampilkan data (Descriptive) atau memperingatkan (Predictive). Agro-Shield berada di puncak piramida analitik dengan memberikan resep penanganan langsung (contoh: dosis pupuk/kapur) layaknya pakar.</td>
+        </tr>
+        <tr>
+            <td><b>2. Bebas Halusinasi (RAG Architecture)</b></td>
+            <td>Menggunakan Retrieval-Augmented Generation (RAG) via Langflow. Model IBM watsonx Granite dikunci untuk menjawab hanya berdasarkan PDF Panduan Mitigasi valid, mengeliminasi risiko rekomendasi ngawur.</td>
+        </tr>
+        <tr>
+            <td><b>3. Pengembangan Lean & Cepat</b></td>
+            <td>Arsitektur serverless-logic meminimalisir waktu development. Tim mendelegasikan logika penyelesaian masalah pada kemampuan kognitif LLM, alih-alih membuat database rules engine (If-Else) yang kaku.</td>
+        </tr>
+        <tr>
+            <td><b>4. Respon Multi-Variabel Cerdas</b></td>
+            <td>Mampu menganalisis 4 anomali sekaligus (Suhu, Kelembaban Udara, Kelembaban Tanah, pH) dan memahami interaksi biologisnya (misal: cuaca panas + pH asam = keracunan tanah).</td>
+        </tr>
+        <tr>
+            <td rowspan="3"><b>WEAKNESSES</b><br>(Kelemahan Internal)</td>
+            <td><b>1. Simulasi Data Murni</b></td>
+            <td>Sistem bergantung pada CSV simulasi dan belum terhubung dengan sensor IoT fisik (seperti DHT11/pH meter). Masih berstatus purwarupa software.</td>
+        </tr>
+        <tr>
+            <td><b>2. Mock Auth & Backend Terbatas</b></td>
+            <td>Sistem login dan database belum memenuhi standar keamanan industri (production-ready). Belum ada pemisahan peran yang kuat antara Petani dan Penyuluh.</td>
+        </tr>
+        <tr>
+            <td><b>3. Single Domain (Konteks Tunggal)</b></td>
+            <td>PDF knowledge base saat ini sangat spesifik. AI mungkin menolak menjawab jika ditanya tentang komoditas di luar konteks PDF (misal: penyakit cengkeh padahal PDF berisi pedoman padi).</td>
+        </tr>
+        <tr>
+            <td rowspan="3"><b>OPPORTUNITIES</b><br>(Peluang Eksternal)</td>
+            <td><b>1. Sangat Scalable (Agnostik Komoditas)</b></td>
+            <td>Sangat mudah di-skalakan. Cukup ganti/tambahkan PDF Mitigasi untuk komoditas lain (misal: kelapa sawit), maka AI otomatis menjadi pakar sawit tanpa coding ulang.</td>
+        </tr>
+        <tr>
+            <td><b>2. Integrasi Ekosistem B2B IBM</b></td>
+            <td>Berpeluang diintegrasikan dengan platform cuaca IBM (The Weather Company) untuk mendapatkan hyper-local weather API guna melengkapi data sensor tanah.</td>
+        </tr>
+        <tr>
+            <td><b>3. Asisten Penyuluh Digital 24 Jam</b></td>
+            <td>Menjawab isu kurangnya Penyuluh Pertanian (PPL) di Indonesia dengan mengubah sistem menjadi chatbot WhatsApp untuk membantu ribuan petani kecil.</td>
+        </tr>
+        <tr>
+            <td rowspan="3"><b>THREATS</b><br>(Ancaman Eksternal)</td>
+            <td><b>1. Persepsi Kompleksitas (Penjurian)</b></td>
+            <td>Risiko juri software engineering tradisional menganggap dashboard ini "terlalu sederhana" jika tidak memahami kerumitan proses RAG, Chunking, dan Embedding di Langflow.</td>
+        </tr>
+        <tr>
+            <td><b>2. Ketergantungan API (Downtime)</b></td>
+            <td>Bergantung penuh pada layanan API IBM Cloud dan watsonx. Jika koneksi internet down atau terkena rate limit saat demo, fungsi AI lumpuh. (Wajib siapkan video demo offline).</td>
+        </tr>
+        <tr>
+            <td><b>3. Persaingan Solusi Konvensional</b></td>
+            <td>Kompetisi dengan startup agritech bermodal besar yang membagikan sensor fisik gratis. Agro-Shield harus membuktikan bahwa "Kecerdasan AI" lebih bernilai dari sekadar perangkat keras.</td>
+        </tr>
+    </table>
+</body>
+</html>

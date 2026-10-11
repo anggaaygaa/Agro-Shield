@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro-Shield | Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        sys: {
+                            bg: 'var(--bg-color)',
+                            surface: 'var(--surface-color)',
+                            accent: 'var(--accent-color)',
+                            accentHover: 'var(--accent-hover)',
+                            text: 'var(--text-color)',
+                            muted: 'var(--text-muted)',
+                            border: 'var(--border-color)',
+                            danger: 'var(--danger-color)',
+                            dangerBg: 'var(--danger-bg)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 
+           Sistem Palet Warna Ketat (4 Warna Inti + 1 Warna Peringatan)
+           Ini menjamin konsistensi 100% dan desain yang jauh lebih matang.
+        */
+        :root {
+            /* LIGHT MODE PALETTE */
+            --bg-color: #F8FAFC;      /* 1. Base Background */
+            --surface-color: #FFFFFF; /* 2. Surface / Cards */
+            --accent-color: #059669;  /* 3. Primary Accent (Emerald) */
+            --text-color: #0F172A;    /* 4. Primary Text */
+            
+            --accent-hover: #047857;  /* Turunan Accent */
+            --text-muted: #64748B;    /* Turunan Text */
+            --border-color: #E2E8F0;  /* Turunan Surface */
+            
+            --danger-color: #DC2626;  /* 5. Semantic Warning */
+            --danger-bg: #FEF2F2;     
+        }
+        
+        .dark {
+            /* DARK MODE PALETTE */
+            --bg-color: #020617;      /* 1. Base Background */
+            --surface-color: #0F172A; /* 2. Surface / Cards */
+            --accent-color: #10B981;  /* 3. Primary Accent */
+            --text-color: #F8FAFC;    /* 4. Primary Text */
+            
+            --accent-hover: #34D399;  /* Turunan Accent */
+            --text-muted: #94A3B8;    /* Turunan Text */
+            --border-color: #1E293B;  /* Turunan Surface */
+            
+            --danger-color: #EF4444;  /* 5. Semantic Warning */
+            --danger-bg: #450A0A;     
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Typing Indicator Animation */
+        .typing-dot { animation: typingBounce 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Modern Load Animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body class="min-h-screen transition-colors duration-300">
+    
+    <!-- Navbar -->
+    <nav class="bg-sys-surface shadow-sm px-6 py-4 flex justify-between items-center border-b border-sys-border transition-colors">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-sys-accent text-sys-surface rounded-lg flex items-center justify-center font-bold text-xl shadow-md">
+                A
+            </div>
+            <h1 class="text-xl font-bold text-sys-text">Agro-Shield Dashboard</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button id="darkModeToggle" class="p-2 rounded-lg text-sys-muted hover:bg-sys-border active:scale-95 transition-all" title="Toggle Dark Mode">
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+            </button>
+            <div class="flex items-center gap-2 mr-4 bg-sys-surface px-3 py-1.5 border border-sys-border rounded-full shadow-sm">
+                <span class="text-[10px] font-bold text-sys-accent uppercase tracking-wider">Auto-Pilot</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="autoPilotToggle" class="sr-only peer">
+                  <div class="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-sys-accent"></div>
+                </label>
+            </div>
+            <span class="text-sm font-medium text-sys-muted">Blok Area: <strong>A</strong></span>
+            <a href="/" class="text-sm text-sys-danger hover:opacity-80 active:scale-95 font-medium px-4 py-2 bg-sys-dangerBg rounded-lg transition-all">Keluar</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="p-6 max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-6 h-[calc(100vh-80px)]">
+        
+        <!-- Kiri: Analytics & Charts (70%) -->
+        <section class="w-full lg:w-[70%] flex flex-col gap-6">
+            
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Suhu -->
+                <div class="animate-fade-in bg-sys-surface p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-sys-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group" style="animation-delay: 0.1s;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sys-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <p class="text-sm text-sys-muted font-medium">Suhu Saat Ini</p>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <h2 id="tempStat" class="text-3xl font-bold text-sys-danger tabular-nums tracking-tight group-hover:scale-105 transition-transform origin-bottom-left">37.0°C</h2>
+                        <span id="tempBadge" class="text-xs text-sys-danger font-medium bg-sys-dangerBg px-2 py-0.5 rounded flex items-center mb-1">↑ Naik</span>
+                    </div>
+                </div>
+                <!-- Kelembapan -->
+                <div class="animate-fade-in bg-sys-surface p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-sys-border border-l-4 border-l-sys-danger transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group" style="animation-delay: 0.2s;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sys-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18v.01M16 18v.01M8 18v.01M10 21v.01M14 21v.01" /></svg>
+                        <p class="text-sm text-sys-muted font-medium">Kelembapan Tanah</p>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <h2 id="humStat" class="text-3xl font-bold text-sys-danger tabular-nums tracking-tight group-hover:scale-105 transition-transform origin-bottom-left">25%</h2>
+                        <span id="humBadge" class="text-xs text-sys-danger font-medium bg-sys-dangerBg px-2 py-0.5 rounded flex items-center mb-1">ANOMALI</span>
+                    </div>
+                </div>
+                <!-- pH Tanah -->
+                <div class="animate-fade-in bg-sys-surface p-5 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-sys-border transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group" style="animation-delay: 0.3s;">
+                    <div class="flex items-center gap-2 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-sys-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                        <p class="text-sm text-sys-muted font-medium">pH Tanah</p>
+                    </div>
+                    <div class="flex items-end gap-2">
+                        <h2 id="phStat" class="text-3xl font-bold text-sys-text tabular-nums tracking-tight group-hover:scale-105 transition-transform origin-bottom-left">6.1</h2>
+                        <span id="phBadge" class="text-xs text-sys-muted font-medium mb-1">Normal</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="animate-fade-in bg-sys-surface p-6 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-sys-border flex-grow flex flex-col transition-all duration-300 hover:shadow-lg" style="animation-delay: 0.4s;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-sys-text">Pemantauan Lingkungan Real-time</h3>
+                    <span id="headerWarning" class="px-3 py-1 bg-sys-dangerBg text-sys-danger text-xs font-bold rounded-full animate-pulse border border-sys-danger">WARNING DETECTED</span>
+                </div>
+                <div class="relative flex-grow w-full h-full min-h-[300px]">
+                    <canvas id="sensorChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Kanan: AI Assistant / IBM Bob Panel (30%) -->
+        <section class="w-full lg:w-[30%] bg-sys-surface rounded-2xl shadow-sm border border-sys-border flex flex-col overflow-hidden transition-colors">
+            <!-- Header Chat -->
+            <div class="bg-sys-bg p-4 flex items-center gap-3 border-b border-sys-border">
+                <div class="w-9 h-9 rounded-full bg-sys-accent text-sys-surface flex items-center justify-center text-sm font-bold shadow-sm">
+                    AI
+                </div>
+                <div>
+                    <h3 class="font-semibold text-sm text-sys-text">IBM Bob Assistant</h3>
+                    <p class="text-xs text-sys-muted">Powered by watsonx Granite</p>
+                </div>
+                <button id="exportLogBtn" class="ml-auto text-xs bg-sys-border hover:bg-sys-muted text-sys-text px-3 py-1.5 rounded-lg active:scale-95 transition-all flex items-center gap-1 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Log
+                </button>
+            </div>
+            
+            <!-- Chat Messages Area -->
+            <div class="flex-grow p-4 overflow-y-auto flex flex-col gap-4 bg-sys-bg transition-colors" id="chatContainer">
+                
+                <!-- System Alert Message -->
+                <div class="flex flex-col gap-1 max-w-[85%] self-start">
+                    <div class="bg-sys-dangerBg border border-sys-danger text-sys-danger p-3 rounded-2xl rounded-tl-sm text-sm">
+                        <strong class="flex items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                            Peringatan Anomali Sistem!
+                        </strong>
+                        <p class="mt-1 text-xs">Kelembapan tanah turun drastis ke 25% (di bawah batas normal 40%). Suhu meningkat tajam ke 37.0°C.</p>
+                    </div>
+                    <span class="text-[10px] text-sys-muted ml-1">12:00 PM</span>
+                </div>
+
+                <!-- AI Mitigation Response (Mocked RAG output) -->
+                <div class="flex flex-col gap-1 max-w-[85%] self-start mt-2">
+                    <div class="bg-sys-surface border border-sys-border text-sys-text p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm transition-colors">
+                        Berdasarkan literatur mitigasi pertanian yang ada di database saya, berikut tindakan yang harus segera dilakukan:
+                        <ul class="list-disc ml-4 mt-2 space-y-1 text-xs text-sys-muted">
+                            <li>Aktifkan sistem irigasi tetes (drip irrigation) di Blok A selama 45 menit.</li>
+                            <li>Pasang jaring peneduh (paranet) sementara jika paparan matahari terus berlanjut.</li>
+                            <li>Tunda pemberian pupuk berbasis nitrogen tinggi sampai kelembapan tanah kembali di atas 40%.</li>
+                        </ul>
+                        <p class="mt-2 text-xs font-medium text-sys-accent">Apakah Anda ingin saya mengotomatiskan penjadwalan irigasi sekarang?</p>
+                    </div>
+                    <span class="text-[10px] text-sys-muted ml-1">12:00 PM</span>
+                </div>
+
+            </div>
+            
+            <!-- Chat Input Form -->
+            <div class="p-4 bg-sys-surface border-t border-sys-border transition-colors">
+                <form id="chatForm" class="flex gap-2">
+                    <div class="relative flex-grow flex items-center">
+                        <input type="text" id="chatInput" placeholder="Tanyakan instruksi lebih lanjut..." autocomplete="off"
+                               class="w-full pl-4 pr-10 py-2 bg-sys-bg border border-sys-border text-sys-text rounded-full text-sm focus:bg-sys-surface focus:border-sys-accent focus:ring-1 focus:ring-sys-accent outline-none transition-all">
+                        <button type="button" id="micBtn" class="absolute right-3 text-sys-muted hover:text-sys-danger transition-colors" title="Bicara">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                        </button>
+                    </div>
+                    <button type="submit" id="chatSubmit" class="w-10 h-10 shrink-0 bg-sys-accent hover:bg-sys-accentHover text-sys-surface rounded-full flex items-center justify-center shadow-md hover:shadow-lg active:scale-95 transition-all duration-300 disabled:opacity-50 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Chart Script -->
+    <script>
+        // Menggunakan CSS variables untuk sinkronisasi warna chart sempurna
+        const style = getComputedStyle(document.body);
+        const getVar = (name) => style.getPropertyValue(name).trim();
+
+        const ctx = document.getElementById('sensorChart').getContext('2d');
+        
+        // Menyerap warna dari CSS Variables agar chart selaras 100% dengan tema
+        const accentHex = getVar('--accent-color');
+        const dangerHex = getVar('--danger-color');
+
+        const gradientAccent = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientAccent.addColorStop(0, accentHex + '33'); // 20% opacity
+        gradientAccent.addColorStop(1, accentHex + '00'); // 0% opacity
+        
+        const gradientDanger = ctx.createLinearGradient(0, 0, 0, 350);
+        gradientDanger.addColorStop(0, dangerHex + '33');
+        gradientDanger.addColorStop(1, dangerHex + '00');
+
+        window.sensorChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['08:00', '09:00', '10:00', '11:00', '12:00'],
+                datasets: [
+                    {
+                        label: 'Kelembapan (%)',
+                        data: [62, 59, 30, 27, 25],
+                        borderColor: accentHex,
+                        backgroundColor: gradientAccent,
+                        borderWidth: 3,
+                        tension: 0.5,
+                        fill: true,
+                        pointBackgroundColor: accentHex,
+                        pointBorderColor: getVar('--surface-color'),
+                        pointBorderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Suhu (°C)',
+                        data: [28.0, 28.8, 35.5, 36.2, 37.0],
+                        borderColor: dangerHex,
+                        backgroundColor: gradientDanger,
+                        borderWidth: 3,
+                        tension: 0.5,
+                        fill: true,
+                        pointBackgroundColor: dangerHex,
+                        pointBorderColor: getVar('--surface-color'),
+                        pointBorderWidth: 2,
+                        pointRadius: [0, 0, 0, 0, 6],
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { 
+                        position: 'top',
+                        labels: { color: getVar('--text-muted') }
+                    },
+                    tooltip: {
+                        backgroundColor: getVar('--surface-color'),
+                        titleColor: getVar('--text-color'),
+                        bodyColor: getVar('--text-muted'),
+                        borderColor: getVar('--border-color'),
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        boxPadding: 4,
+                        callbacks: {
+                            labelTextColor: function(context) {
+                                return getVar('--text-muted');
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        ticks: { 
+                            color: getVar('--text-muted'),
+                            font: { family: 'Inter', size: 11, weight: '500' }
+                        },
+                        grid: { display: false }
+                    },
+                    y: { 
+                        beginAtZero: false, 
+                        suggestedMax: 80,
+                        ticks: { 
+                            color: getVar('--text-muted'),
+                            font: { family: 'Inter', size: 11, weight: '500' },
+                            padding: 10
+                        },
+                        border: { display: false },
+                        grid: { 
+                            color: getVar('--border-color'),
+                            tickLength: 0,
+                            borderDash: [5, 5]
+                        }
+                    }
+                }
+            }
+        });
+
+        // Dark Mode Toggle Logic
+        const html = document.documentElement;
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        function updateChartColors() {
+            setTimeout(() => { 
+                const newMuted = getComputedStyle(document.body).getPropertyValue('--text-muted').trim();
+                const newBorder = getComputedStyle(document.body).getPropertyValue('--border-color').trim();
+                const newSurface = getComputedStyle(document.body).getPropertyValue('--surface-color').trim();
+                const newText = getComputedStyle(document.body).getPropertyValue('--text-color').trim();
+                
+                window.sensorChart.options.plugins.legend.labels.color = newMuted;
+                window.sensorChart.options.plugins.tooltip.backgroundColor = newSurface;
+                window.sensorChart.options.plugins.tooltip.titleColor = newText;
+                window.sensorChart.options.plugins.tooltip.bodyColor = newMuted;
+                window.sensorChart.options.plugins.tooltip.borderColor = newBorder;
+
+                window.sensorChart.options.scales.x.ticks.color = newMuted;
+                window.sensorChart.options.scales.y.ticks.color = newMuted;
+                window.sensorChart.options.scales.x.grid.color = newBorder;
+                window.sensorChart.options.scales.y.grid.color = newBorder;
+                window.sensorChart.update('none');
+            }, 50);
+        }
+
+        // Animasi Denyut pada Titik Kritis
+        window.isWarningActive = true;
+        let pulseTime = 0;
+        setInterval(() => {
+            if(!window.isWarningActive || !window.sensorChart) return;
+            pulseTime += 0.15;
+            const size = 5 + Math.abs(Math.sin(pulseTime)) * 6; 
+            const meta = window.sensorChart.data.datasets[1];
+            if(meta.data.length >= 5) {
+                const arr = new Array(meta.data.length).fill(3);
+                arr[arr.length - 1] = size;
+                meta.pointRadius = arr;
+                
+                const alpha = 0.4 + Math.abs(Math.sin(pulseTime)) * 0.6;
+                const colorArr = new Array(meta.data.length).fill('#ef4444');
+                colorArr[colorArr.length - 1] = `rgba(239, 68, 68, ${alpha})`;
+                meta.pointBackgroundColor = colorArr;
+
+                window.sensorChart.update('none');
+            }
+        }, 50);
+
+        darkModeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            updateChartColors();
+        });
+    </script>
+
+    <!-- Chat Logic with Langflow Integration -->
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatContainer = document.getElementById('chatContainer');
+        const chatSubmit = document.getElementById('chatSubmit');
+
+        const LANGFLOW_FLOW_ID = '01cdc6a9-e3d1-4583-a983-31f6773a1c59'; 
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            chatInput.value = '';
+            chatSubmit.disabled = true;
+
+            const loadingId = 'loading-' + Date.now();
+            const typingHtml = `<div class="flex items-center gap-1.5 py-1 px-1">
+                <div class="w-1.5 h-1.5 bg-sys-accent rounded-full typing-dot"></div>
+                <div class="w-1.5 h-1.5 bg-sys-accent rounded-full typing-dot"></div>
+                <div class="w-1.5 h-1.5 bg-sys-accent rounded-full typing-dot"></div>
+            </div>`;
+            appendMessage('ai', typingHtml, loadingId);
+
+            try {
+                const currentTemp = "37.0°C";
+                const currentHum = "25%";
+                const currentPh = "6.1";
+                const enrichedMessage = `[SISTEM OTOMATIS - DATA SENSOR SAAT INI: Suhu ${currentTemp}, Kelembapan ${currentHum}, pH ${currentPh}]. Pertanyaan Petani: ${message}`;
+
+                const response = await fetch(`http://localhost:7860/api/v1/run/${LANGFLOW_FLOW_ID}?stream=false`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        input_value: enrichedMessage,
+                        output_type: "chat",
+                        input_type: "chat",
+                        session_id: "agro-shield-demo-123"
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status} - ${errorText}`);
+                }
+                const data = await response.json();
+                
+                const aiResponseText = data.outputs[0].outputs[0].results.message.text;
+                let finalHtml = formatAIResponse(aiResponseText);
+                
+                if (aiResponseText.toLowerCase().includes("irigasi") || aiResponseText.toLowerCase().includes("pengairan") || aiResponseText.toLowerCase().includes("siram")) {
+                    const actionBtnId = 'action-' + Date.now();
+                    finalHtml += `
+                    <div class="mt-4 p-3 bg-sys-bg border border-sys-border rounded-lg text-center animate-pulse">
+                        <p class="text-xs text-sys-accent font-bold mb-2">⚡ REKOMENDASI AKSI CEPAT TERDETEKSI</p>
+                        <button id="${actionBtnId}" class="bg-sys-accent hover:bg-sys-accentHover text-sys-surface text-xs font-bold py-2 px-4 rounded shadow-md active:scale-95 transition-all w-full">AKTIFKAN POMPA IRIGASI SEKARANG</button>
+                    </div>`;
+                    
+                    setTimeout(() => {
+                        const btn = document.getElementById(actionBtnId);
+                        if(btn) {
+                            btn.addEventListener('click', function() {
+                                if(this.disabled) return;
+                                this.disabled = true;
+                                this.innerHTML = "💦 POMPA AKTIF (Memproses Pemulihan...)";
+                                this.classList.remove('hover:bg-sys-accentHover', 'active:scale-95');
+                                this.classList.add('cursor-not-allowed', 'opacity-90');
+                                this.parentElement.classList.remove('animate-pulse');
+                                
+                                if(window.sensorChart) {
+                                    window.isWarningActive = false; // Matikan denyut merah peringatan
+                                    
+                                    // Reset radius agar titik merah tidak besar lagi
+                                    const meta = window.sensorChart.data.datasets[1];
+                                    meta.pointRadius = new Array(meta.data.length).fill(3);
+                                    meta.pointBackgroundColor = new Array(meta.data.length).fill('#ef4444');
+
+                                    // Push titik awal pergerakan ke grafik (akan dianimasikan oleh Engine)
+                                    window.sensorChart.data.labels.push(new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                                    window.sensorChart.data.datasets[0].data.push(Math.round(window.simKelembapan)); 
+                                    window.sensorChart.data.datasets[1].data.push(window.simSuhu); 
+                                    window.sensorChart.update();
+                                    
+                                    // Aktifkan Engine Simulasi Pemulihan Live
+                                    window.isIrrigationActive = true;
+                                }
+                                
+                                // Ubah warna ke status "Memproses" (Biru/Hijau berkedip)
+                                document.getElementById('humStat').className = 'text-3xl font-bold text-sys-accent tabular-nums tracking-tight group-hover:scale-105 transition-transform origin-bottom-left';
+                                document.getElementById('humBadge').innerText = 'PROSES...';
+                                document.getElementById('humBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                                
+                                document.getElementById('tempStat').className = 'text-3xl font-bold text-sys-accent tabular-nums tracking-tight group-hover:scale-105 transition-transform origin-bottom-left';
+                                document.getElementById('tempBadge').innerText = 'PROSES...';
+                                document.getElementById('tempBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                                
+                                document.getElementById('phBadge').innerText = 'Netralisasi...';
+                                document.getElementById('phBadge').classList.add('animate-pulse');
+
+                                document.getElementById('headerWarning').style.display = 'none';
+                            });
+                        }
+                    }, 100);
+                }
+                
+                document.getElementById(loadingId).innerHTML = finalHtml;
+            } catch (error) {
+                console.error("API Error:", error);
+                // DEMO FALLBACK MODE: Jika API Langflow mati/limit, tampilkan respons statis.
+                const fallbackHtml = `Kondisi blok A hari ini <strong class="text-sys-danger">TIDAK AMAN (Status: WARNING)</strong>.<br><br>
+Lahan Anda terindikasi mengalami Anomali Kekeringan Ekstrem & Penurunan pH karena suhu mencapai 37.0°C (melebihi batas normal 28°C–32°C), kelembapan tanah sangat kering di angka 25% (normal 35%–50%), dan pH 6.1 berada di bawah kisaran ideal.<br><br>
+<strong>Instruksi Penanganan Konkret:</strong><br>
+Segera aktifkan sistem irigasi tetes secara otomatis untuk mengembalikan kelembapan tanah dan mendinginkan suhu.<br><br>
+<div class="mt-3 animate-pulse">
+    <p class="text-[10px] font-bold text-sys-accent mb-1 uppercase tracking-wider flex items-center gap-1">⚡ REKOMENDASI AKSI CEPAT TERDETEKSI</p>
+    <button id="btn-mitigasi-fallback" class="bg-sys-accent hover:bg-sys-accentHover text-sys-surface text-xs font-bold py-2 px-4 rounded shadow-md active:scale-95 transition-all w-full">AKTIFKAN POMPA IRIGASI SEKARANG</button>
+</div>`;
+                document.getElementById(loadingId).innerHTML = fallbackHtml;
+                
+                // Ikat aksi klik tombol pada fallback
+                setTimeout(() => {
+                    const fallbackBtn = document.getElementById('btn-mitigasi-fallback');
+                    if(fallbackBtn) {
+                        fallbackBtn.addEventListener('click', function() {
+                            if(this.disabled) return;
+                            this.disabled = true;
+                            this.innerHTML = "💦 POMPA AKTIF (Memproses Pemulihan...)";
+                            this.classList.remove('hover:bg-sys-accentHover', 'active:scale-95');
+                            this.classList.add('cursor-not-allowed', 'opacity-90');
+                            this.parentElement.classList.remove('animate-pulse');
+                            
+                            if(window.sensorChart) {
+                                window.isWarningActive = false; // Matikan denyut merah
+                                const meta = window.sensorChart.data.datasets[1];
+                                meta.pointRadius = new Array(meta.data.length).fill(3);
+                                meta.pointBackgroundColor = new Array(meta.data.length).fill('#ef4444');
+                                window.sensorChart.data.labels.push(new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                                window.sensorChart.data.datasets[0].data.push(Math.round(window.simKelembapan)); 
+                                window.sensorChart.data.datasets[1].data.push(window.simSuhu); 
+                                window.sensorChart.update();
+                                
+                                window.isIrrigationActive = true; // Jalankan pendinginan!
+                            }
+                            
+                            document.getElementById('humBadge').innerText = 'PROSES...';
+                            document.getElementById('humBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                            document.getElementById('tempBadge').innerText = 'PROSES...';
+                            document.getElementById('tempBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                            document.getElementById('phBadge').innerText = 'Netralisasi...';
+                            document.getElementById('phBadge').classList.add('animate-pulse');
+                        });
+                    }
+                }, 100);
+            } finally {
+                chatSubmit.disabled = false;
+                chatInput.focus();
+            }
+        });
+
+        function appendMessage(sender, text, id = '') {
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            let html = '';
+            
+            if (sender === 'user') {
+                html = `
+                <div class="flex flex-col gap-1 max-w-[85%] self-end mt-2">
+                    <div class="bg-sys-accent text-sys-surface p-3 rounded-2xl rounded-tr-sm text-sm shadow-sm">
+                        ${text}
+                    </div>
+                    <span class="text-[10px] text-sys-muted self-end mr-1">${time}</span>
+                </div>`;
+            } else {
+                html = `
+                <div class="flex flex-col gap-1 max-w-[85%] self-start mt-2">
+                    <div class="bg-sys-surface border border-sys-border text-sys-text p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm transition-colors" id="${id}">
+                        ${text}
+                    </div>
+                    <span class="text-[10px] text-sys-muted ml-1">${time}</span>
+                </div>`;
+            }
+            
+            chatContainer.insertAdjacentHTML('beforeend', html);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function formatAIResponse(text) {
+            // Bersihkan syntax LaTeX kotor dari watsonx
+            let cleanText = text.replace(/\$\\[a-zA-Z]+\{/g, '').replace(/\}\$/g, '').replace(/\$/g, '');
+            // Ubah _x menjadi subscript HTML agar rumus kimia terlihat rapi
+            cleanText = cleanText.replace(/_(\d+)/g, '<sub>$1</sub>');
+
+            if (typeof marked !== 'undefined') {
+                return marked.parse(cleanText);
+            }
+            return cleanText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+        }
+
+        document.getElementById('exportLogBtn').addEventListener('click', () => {
+            let logText = "=========================================\n";
+            logText += "      AGRO-SHIELD INCIDENT REPORT\n";
+            logText += "=========================================\n";
+            logText += "Tanggal: " + new Date().toLocaleString('id-ID') + "\n\n";
+            
+            const messages = Array.from(chatContainer.querySelectorAll('.max-w-\\[85\\%\\]'));
+            messages.forEach(msg => {
+                if (msg.querySelector('.typing-dot')) return; // Abaikan indikator mengetik
+
+                // Deteksi pengirim menggunakan kelas layout (self-end) alih-alih warna (bg-sys-accent)
+                // karena respons AI yang memiliki tombol peringatan merah juga memiliki class bg-sys-accent
+                const isUser = msg.classList.contains('self-end');
+                
+                const text = msg.innerText.trim();
+                if (isUser) {
+                    logText += "[PETANI]:\n" + text + "\n";
+                } else {
+                    logText += "[SYSTEM/AI]:\n" + text + "\n";
+                }
+                logText += "-----------------------------------------\n";
+            });
+
+            const blob = new Blob([logText], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "AgroShield_Mitigation_Log.txt";
+            a.click();
+        });
+
+        const micBtn = document.getElementById('micBtn');
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'id-ID';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            micBtn.addEventListener('click', () => {
+                recognition.start();
+                micBtn.classList.add('text-sys-danger', 'animate-pulse');
+                chatInput.placeholder = "Mendengarkan suara Anda...";
+            });
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                chatInput.value = transcript;
+                micBtn.classList.remove('text-sys-danger', 'animate-pulse');
+                chatInput.placeholder = "Tanyakan instruksi lebih lanjut...";
+            };
+
+            recognition.onerror = () => {
+                micBtn.classList.remove('text-sys-danger', 'animate-pulse');
+                chatInput.placeholder = "Tanyakan instruksi lebih lanjut...";
+            };
+        } else {
+            micBtn.style.display = 'none';
+        }
+
+        // ==========================================
+        // AGRO-SHIELD LIVE IOT SIMULATION ENGINE
+        // ==========================================
+        window.simSuhu = 37.0;
+        window.simKelembapan = 25.0;
+        window.simPh = 6.1;
+        window.isIrrigationActive = false;
+        window.isRecovered = false;
+        window.isAutoPilot = false;
+
+        // Auto-Pilot Listener
+        document.getElementById('autoPilotToggle').addEventListener('change', function(e) {
+            window.isAutoPilot = e.target.checked;
+            if (window.isAutoPilot && !window.isRecovered && !window.isIrrigationActive) {
+                // Sedang krisis, jalankan mitigasi instan
+                const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const autoHtml = `
+                <div class="flex flex-col gap-1 max-w-[85%] self-start mt-4">
+                    <div class="bg-sys-accent text-sys-surface p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm transition-colors">
+                        <strong class="flex items-center gap-1 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Mode Auto-Pilot Aktif
+                        </strong>
+                        <p class="text-xs">Sistem mengambil alih kendali. Menjalankan Protokol Irigasi Otomatis sekarang...</p>
+                    </div>
+                    <span class="text-[10px] text-sys-muted ml-1">${time}</span>
+                </div>`;
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.insertAdjacentHTML('beforeend', autoHtml);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                if(window.sensorChart) {
+                    window.isWarningActive = false;
+                    const metaHum = window.sensorChart.data.datasets[0];
+                    const metaTemp = window.sensorChart.data.datasets[1];
+                    
+                    // Reset all points to 0 radius, then make the last one 6
+                    metaHum.pointRadius = new Array(metaHum.data.length).fill(0);
+                    metaTemp.pointRadius = new Array(metaTemp.data.length).fill(0);
+                    
+                    metaTemp.pointBackgroundColor = new Array(metaTemp.data.length).fill(getComputedStyle(document.body).getPropertyValue('--danger-color').trim());
+                    window.sensorChart.data.labels.push(new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                    window.sensorChart.data.datasets[0].data.push(Math.round(window.simKelembapan)); 
+                    window.sensorChart.data.datasets[1].data.push(window.simSuhu); 
+                    
+                    // The new point should have radius 6
+                    metaHum.pointRadius.push(0);
+                    metaTemp.pointRadius.push(6);
+                    
+                    window.sensorChart.update();
+                }
+
+                window.isIrrigationActive = true;
+                
+                document.getElementById('humBadge').innerText = 'PROSES...';
+                document.getElementById('humBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                document.getElementById('tempBadge').innerText = 'PROSES...';
+                document.getElementById('tempBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                document.getElementById('phBadge').innerText = 'Netralisasi...';
+                document.getElementById('phBadge').classList.add('animate-pulse');
+            }
+        });
+
+        function triggerSecondaryWarning() {
+            window.isRecovered = false; // Kembali ke mode krisis
+            
+            // 1. Update Badges ke RED
+            const humCard = document.getElementById('humStat').closest('.bg-sys-surface');
+            if(humCard) {
+                humCard.classList.remove('border-l-sys-accent');
+                humCard.classList.add('border-l-sys-danger', 'border-l-4');
+            }
+            
+            const humBadge = document.getElementById('humBadge');
+            humBadge.innerText = 'BAHAYA';
+            humBadge.className = 'text-xs text-sys-danger font-medium bg-sys-dangerBg border border-sys-danger px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+            
+            const tempBadge = document.getElementById('tempBadge');
+            tempBadge.innerText = '↑ Bahaya';
+            tempBadge.className = 'text-xs text-sys-danger font-medium bg-sys-dangerBg border border-sys-danger px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+
+            // 2. Append Alert Chat
+            const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const alertHtml = `
+            <div class="flex flex-col gap-1 max-w-[85%] self-start mt-4">
+                <div class="bg-sys-dangerBg border border-sys-danger text-sys-danger p-3 rounded-2xl rounded-tl-sm text-sm">
+                    <strong class="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        Peringatan Anomali Berulang!
+                    </strong>
+                    <p class="mt-1 text-xs">Suhu lahan kembali memanas melebihi batas aman (33.0°C). Laju evaporasi tanah sangat tinggi akibat panas ekstrem.</p>
+                </div>
+                <span class="text-[10px] text-sys-muted ml-1">${time}</span>
+            </div>`;
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.insertAdjacentHTML('beforeend', alertHtml);
+
+            // 3. Append Action Button Chat
+            const btnId = 'btn-mitigasi-auto-' + Date.now();
+            const actionHtml = `
+            <div class="flex flex-col gap-1 max-w-[85%] self-start mt-2">
+                <div class="bg-sys-surface border border-sys-border text-sys-text p-3 rounded-2xl rounded-tl-sm text-sm shadow-sm transition-colors">
+                    <p class="mb-2">Tindakan darurat kembali diperlukan untuk mencegah dehidrasi pada akar. Apakah Anda ingin mengaktifkan ulang pompa irigasi?</p>
+                    <div class="mt-3 animate-pulse">
+                        <p class="text-[10px] font-bold text-sys-accent mb-1 uppercase tracking-wider flex items-center gap-1">
+                            ⚡ REKOMENDASI AKSI CEPAT
+                        </p>
+                        <button id="${btnId}" class="bg-sys-accent hover:bg-sys-accentHover text-sys-surface text-xs font-bold py-2 px-4 rounded shadow-md active:scale-95 transition-all w-full">AKTIFKAN POMPA KEMBALI</button>
+                    </div>
+                </div>
+                <span class="text-[10px] text-sys-muted ml-1">${time}</span>
+            </div>`;
+            chatContainer.insertAdjacentHTML('beforeend', actionHtml);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // 4. Bind Button Click
+            const newBtn = document.getElementById(btnId);
+            newBtn.addEventListener('click', function() {
+                if(this.disabled) return;
+                this.disabled = true;
+                this.innerHTML = "💦 POMPA AKTIF (Memproses Pemulihan...)";
+                this.classList.remove('hover:bg-sys-accentHover', 'active:scale-95');
+                this.classList.add('cursor-not-allowed', 'opacity-90');
+                this.parentElement.classList.remove('animate-pulse');
+                
+                // Push titik ke grafik
+                // Push titik ke grafik
+                const metaHum = window.sensorChart.data.datasets[0];
+                const metaTemp = window.sensorChart.data.datasets[1];
+                metaHum.pointRadius = new Array(metaHum.data.length).fill(0);
+                metaTemp.pointRadius = new Array(metaTemp.data.length).fill(0);
+                metaTemp.pointBackgroundColor = new Array(metaTemp.data.length).fill(getComputedStyle(document.body).getPropertyValue('--danger-color').trim());
+                window.sensorChart.data.labels.push(new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+                window.sensorChart.data.datasets[0].data.push(Math.round(window.simKelembapan)); 
+                window.sensorChart.data.datasets[1].data.push(window.simSuhu); 
+                metaHum.pointRadius.push(0);
+                metaTemp.pointRadius.push(6);
+                window.sensorChart.update();
+
+                window.isIrrigationActive = true; // Jalankan lagi pendinginan!
+                
+                document.getElementById('humBadge').innerText = 'PROSES...';
+                document.getElementById('humBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+                document.getElementById('tempBadge').innerText = 'PROSES...';
+                document.getElementById('tempBadge').className = 'text-xs text-sys-surface font-medium bg-sys-accent px-2 py-0.5 rounded flex items-center mb-1 animate-pulse';
+            });
+
+            // Jika Auto-Pilot nyala, AI akan mengklik tombolnya sendiri setelah 2.5 detik
+            if (window.isAutoPilot) {
+                setTimeout(() => {
+                    if(!newBtn.disabled) newBtn.click();
+                }, 2500);
+            }
+        }
+
+        setInterval(() => {
+            if (!window.sensorChart) return;
+            
+                if (window.isIrrigationActive) {
+                // FASE PEMULIHAN (IRIGASI MENYALA) - Data merangkak CEPAT ke Normal
+                let reachedTarget = true;
+                
+                // Mendinginkan suhu (2x lebih cepat)
+                if (window.simSuhu > 28.0) { window.simSuhu -= (Math.random() * 0.8 + 0.4); reachedTarget = false; }
+                else { window.simSuhu = 28.0; }
+                
+                // Menjenuhkan tanah (2x lebih cepat)
+                if (window.simKelembapan < 50.0) { window.simKelembapan += (Math.random() * 3.6 + 1.2); reachedTarget = false; }
+                else { window.simKelembapan = 50.0; }
+                
+                // Menetralkan pH
+                if (window.simPh < 6.6) { window.simPh += (Math.random() * 0.1); }
+                else { window.simPh = 6.6; }
+
+                if (reachedTarget) {
+                    window.isIrrigationActive = false;
+                    window.isRecovered = true;
+                    // Ubah tombol
+                    const btn = document.querySelector('.bg-sys-accent.cursor-not-allowed');
+                    if (btn) {
+                        btn.innerHTML = "✅ PENGAIRAN SELESAI (Sistem Normal)";
+                        btn.classList.remove('opacity-90');
+                        btn.style.opacity = '1';
+                    }
+                    // Reset Badges
+                    document.getElementById('humBadge').innerText = 'NORMAL';
+                    document.getElementById('humBadge').className = 'text-xs text-sys-accent font-medium bg-sys-surface border border-sys-accent px-2 py-0.5 rounded flex items-center mb-1';
+                    
+                    const humCard = document.getElementById('humStat').closest('.bg-sys-surface');
+                    if(humCard) {
+                        humCard.classList.remove('border-l-sys-danger');
+                        humCard.classList.add('border-l-sys-accent');
+                    }
+
+                    document.getElementById('tempBadge').innerText = '↓ Normal';
+                    document.getElementById('tempBadge').className = 'text-xs text-sys-accent font-medium bg-sys-surface border border-sys-accent px-2 py-0.5 rounded flex items-center mb-1';
+                    
+                    const phBadge = document.getElementById('phBadge');
+                    phBadge.innerText = 'Ideal';
+                    phBadge.classList.remove('animate-pulse');
+                }
+            } else {
+                // FASE IDLE (FLUKTUASI ALAMI)
+                let tempBias = 0;
+                let humBias = 0;
+                
+                if (window.isRecovered) {
+                    // Simulasi Laju Evaporasi (DIPERCEPAT 4X LIPAT UNTUK DEMO)
+                    tempBias = 0.12; 
+                    humBias = -0.24; 
+                }
+
+                window.simSuhu += (Math.random() * 0.2) - 0.1 + tempBias;
+                window.simKelembapan += (Math.random() * 0.6) - 0.3 + humBias;
+                window.simPh += (Math.random() * 0.02) - 0.01;
+                
+                // Batasan fluktuasi
+                if (!window.isRecovered) {
+                    // SEBELUM RECOVERY (KRISIS) / SETELAH WARNING KEDUA
+                    if(window.simSuhu > 37.5) window.simSuhu = 37.5;
+                    if(window.simKelembapan < 24.0) window.simKelembapan = 24.0;
+                    if(window.simPh < 6.0) window.simPh = 6.0;
+                    
+                    // Dorong kembali ke zona bahaya (DIPERCEPAT)
+                    if (window.simSuhu < 36.5) window.simSuhu += 0.5; 
+                    if (window.simKelembapan > 26.0) window.simKelembapan -= 1.0;
+                    
+                } else {
+                    // Setelah recovery, biarkan lahan memanas dan mengering kembali
+                    // Jika melewati batas aman baru (33.0°C / 34%), picu auto-warning!
+                    if (window.simSuhu >= 33.0 || window.simKelembapan <= 34.0) {
+                        triggerSecondaryWarning();
+                    }
+                }
+            }
+            // Tanda Panah Dinamis untuk Suhu
+            if (typeof window.lastSuhu === 'undefined') window.lastSuhu = window.simSuhu;
+            let tempDirection = (window.simSuhu >= window.lastSuhu) ? '↑' : '↓';
+            window.lastSuhu = window.simSuhu;
+
+            // Update warna teks & arrow suhu + kelembapan
+            const tempStatElem = document.getElementById('tempStat');
+            const tempBadgeElem = document.getElementById('tempBadge');
+            const humStatElem = document.getElementById('humStat');
+            const humCard = humStatElem.closest('.bg-sys-surface');
+
+            // Cek jika tombol sedang ditekan, biarkan badge bertuliskan "PROSES..."
+            if (tempBadgeElem.innerText !== 'PROSES...') {
+                if (window.isRecovered) {
+                    tempBadgeElem.innerText = tempDirection + ' Normal';
+                    tempStatElem.classList.remove('text-sys-danger');
+                    tempStatElem.classList.add('text-sys-accent');
+                    
+                    humStatElem.classList.remove('text-sys-danger');
+                    humStatElem.classList.add('text-sys-accent');
+                    if (humCard) {
+                        humCard.classList.remove('border-l-sys-danger');
+                        humCard.classList.add('border-l-sys-accent');
+                    }
+                } else if (!window.isIrrigationActive) {
+                    tempBadgeElem.innerText = tempDirection + ' Bahaya';
+                    tempStatElem.classList.remove('text-sys-accent');
+                    tempStatElem.classList.add('text-sys-danger');
+                    
+                    humStatElem.classList.remove('text-sys-accent');
+                    humStatElem.classList.add('text-sys-danger');
+                    if (humCard) {
+                        humCard.classList.remove('border-l-sys-accent');
+                        humCard.classList.add('border-l-sys-danger');
+                    }
+                }
+            }
+
+            // Update DOM Numbers Live
+            tempStatElem.innerText = window.simSuhu.toFixed(1) + '°C';
+            document.getElementById('humStat').innerText = Math.round(window.simKelembapan) + '%';
+            document.getElementById('phStat').innerText = window.simPh.toFixed(1);
+
+            // Animate only the LAST point in the chart
+            const metaHum = window.sensorChart.data.datasets[0];
+            const metaTemp = window.sensorChart.data.datasets[1];
+            metaHum.data[metaHum.data.length - 1] = Math.round(window.simKelembapan);
+            metaTemp.data[metaTemp.data.length - 1] = window.simSuhu;
+            window.sensorChart.update('none'); // Update instan tanpa animasi geser grafik
+
+        }, 1000); // Trigger live data 1x setiap detik
+
+    </script>
+</body>
+</html>
